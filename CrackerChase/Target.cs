@@ -9,7 +9,7 @@ namespace CrackerChase
 {
     class Target : Sprite
     {
-
+        public int Score { get; set; }
         static Random rand = new Random();
         override public void Reset()
         {
@@ -21,6 +21,8 @@ namespace CrackerChase
         public Target(int inScreenWidth, int inScreenHeight, Texture2D inSpriteTexture, int inDrawWidth, float inResetX, float inResetY) :
             base(inScreenWidth, inScreenHeight, inSpriteTexture, inDrawWidth, inResetX, inResetY)
         {
+            Score = 10;
         }
+
     }
 }

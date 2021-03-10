@@ -9,11 +9,15 @@ using System.Text;
 
 namespace CrackerChase
 {
+
     /// <summary>
     /// This is the main type for your game.
     /// </summary>
     public class Game1 : Game
     {
+        enum GameStates { StartScreen, Gameplay };
+        GameStates currentState = GameStates.Gameplay;
+
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
 
@@ -39,11 +43,12 @@ namespace CrackerChase
         int score;
         int timer;
 
-        bool playing;
 
 
         void startPlayingGame()
         {
+            currentState = GameStates.Gameplay;
+
             foreach (Sprite s in gameSprites)
             {
                 s.Reset();
@@ -54,7 +59,6 @@ namespace CrackerChase
             }
             messageString = "Cracker Chase";
 
-            playing = true;
             timer = 600;
             score = 0;
 
@@ -85,6 +89,8 @@ namespace CrackerChase
         /// </summary>
         protected override void LoadContent()
         {
+            currentState = GameStates.StartScreen;
+
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
@@ -111,13 +117,20 @@ namespace CrackerChase
                 crackers.Add(cracker);
             }
 
+            for (int i = 0; i < 10; i++)
+            {
+                cracker = new BadTarget(screenWidth, screenHeight, crackerTexture, crackerWidth, 0, 0);
+                gameSprites.Add(cracker);
+                crackers.Add(cracker);
+            }
+
             int cheeseWidth = screenWidth / 15;
             cheese = new Mover(screenWidth, screenHeight, cheeseTexture, cheeseWidth, screenWidth / 2, screenHeight / 2, 500, 500);
             gameSprites.Add(cheese);
 
             // go to the start screen state
 
-            startPlayingGame();
+            messageString = "Press space to start";
         }
 
         /// <summary>
@@ -140,17 +153,19 @@ namespace CrackerChase
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            NewMethod();
-            
+            if (currentState == GameStates.Gameplay)
+            { updateGamePlay(); }
+            else
+            { updateStartScreen(); }
+
             base.Update(gameTime);
         }
 
-        private void NewMethod()
+        private void updateGamePlay()
         {
             KeyboardState keys = Keyboard.GetState();
 
-            if (playing)
-            {
+
 
 
                 if (keys.IsKeyDown(Keys.Up))
@@ -199,7 +214,7 @@ namespace CrackerChase
                     {
                         BurpSound.Play();
                         t.Reset();
-                        score = score + 10;
+                        score = score + t.Score;
                     }
                 }
 
@@ -211,16 +226,9 @@ namespace CrackerChase
                 if (timer == 0)
                 {
                     messageString = " Game Over : Press Space to exit   Score: " + score.ToString();
-                    playing = false;
+                    gameOver();
                 }
-            }
-            else
-            {
-                if (keys.IsKeyDown(Keys.Space))
-                {
-                    Exit();
-                }
-            }
+           
         }
 
 
@@ -232,7 +240,10 @@ namespace CrackerChase
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            drawGamePlay();
+            if (currentState == GameStates.Gameplay)
+            { drawGamePlay(); }
+            else
+            { drawStartScreen(); }
 
             base.Draw(gameTime);
         }
@@ -252,6 +263,39 @@ namespace CrackerChase
             spriteBatch.DrawString(messageFont, messageString, statusPos, Color.Red);
 
             spriteBatch.End();
+        }
+
+        private void updateStartScreen()
+        {
+            KeyboardState keys = Keyboard.GetState();
+
+            if (keys.IsKeyDown(Keys.Space))
+            {
+                startPlayingGame();
+            }
+        }
+
+        private void drawStartScreen()
+        {
+            spriteBatch.Begin();
+
+            foreach (Sprite s in gameSprites)
+            {
+                s.Draw(spriteBatch);
+            }
+            float xPos = (screenWidth - messageFont.MeasureString(messageString).X) / 2;
+
+            Vector2 statusPos = new Vector2(xPos, 10);
+
+            spriteBatch.DrawString(messageFont, messageString, statusPos, Color.Red);
+
+            spriteBatch.End();
+        }
+
+        private void gameOver()
+        {
+            currentState = GameStates.StartScreen;
+            messageString = "Game Over. Press space to start again.     Score: " + score;
         }
     }
 }
